@@ -1,4 +1,5 @@
 import { PortDistanceCalculator } from "./PortDistanceCalculator";
+import { getDistanceBetweenAirports } from './AirportDistanceCalculator';
 import { TransportLeg, TransportMode, CalculationResult } from "./types";
 
 export class JourneyCalculator {
@@ -27,8 +28,12 @@ export class JourneyCalculator {
                 break;
                 
             case "air":
-                
-                this.legs.push({ mode: "air", distanceKm: 0, totalCO2Kg: 0 });
+                const airDistance = getDistanceBetweenAirports(origin, destination);
+                if (!airDistance) {
+                    throw new Error(`An error occurred while calculating the distance between airports "${origin}" and "${destination}".`);
+                }
+
+                this.legs.push({ mode: "air", distanceKm: airDistance.distanceKm, totalCO2Kg: 0 });
 
                 break;
             case "truck":
