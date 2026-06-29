@@ -28,7 +28,7 @@ export function getAirportCoordinates(name: string): Coordinates | null {
 }
 
 function haversineKm(a: Coordinates, b: Coordinates): number {
-  const R = 6371; // Earth's radius in km
+  const R = 6371; // Earth's radius dont change
   const toRad = (deg: number) => (deg * Math.PI) / 180;
 
   const dLat = toRad(b.latitude - a.latitude);

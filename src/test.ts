@@ -1,9 +1,22 @@
 import { JourneyCalculator } from "./JourneyCalculator";
+import { Geocoder } from "./CoordAddressConverter";
 
-const journeyCalc = new JourneyCalculator();
-journeyCalc.addLeg("ship", "Aberdeen, Scotland", "Singapore");
-journeyCalc.addLeg("ship", "Singapore", "Shanghai, China");
+async function main() {
+  const geocoder = new Geocoder();
+  const journeyCalc = new JourneyCalculator();
 
-var legs = journeyCalc.getLegs();
+  await journeyCalc.addLeg("ship", "Aberdeen, Scotland", "Singapore");
+  await journeyCalc.addLeg("ship", "Singapore", "Shanghai, China");
+  await journeyCalc.addLeg("air", "Lowell Field", "Grass Patch Airport");
 
-console.log(legs);
+  const coords = await geocoder.geocode("Aberdeen, Scotland");
+  console.log(coords);
+
+  await journeyCalc.addLeg("truck", "1600 Amphitheatre Parkway, Mountain View, CA", "1 Infinite Loop, Cupertino, CA");
+
+  const legs = await journeyCalc.getLegs();
+  console.log(legs);
+
+}
+
+main().catch(console.error);
