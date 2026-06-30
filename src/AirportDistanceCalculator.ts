@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { haversineKm } from './HaversineKm';
 
 interface Airport {
   name: string;
@@ -6,56 +7,48 @@ interface Airport {
   longitude: number;
 }
 
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
+export class AirportDistanceCalculator {
+    private airports: Airport[];
 
-const airports: Airport[] = JSON.parse(
-  fs.readFileSync("airports_coords.json", "utf8")
-);
+    constructor(dataFilePath: string) {
+        this.airports = JSON.parse(fs.readFileSync(dataFilePath, "utf8"));
+    }
 
-export function getAirportCoordinates(name: string): Coordinates | null {
-  const q = name.toLowerCase();
+    private findAirport(name: string): Airport | null {
+        const q = name.toLowerCase();
+        return (
+            this.airports.find(a => a.name.toLowerCase() === q) ??
+            this.airports.find(a => a.name.toLowerCase().includes(q)) ??
+            null
+        );
+    }
 
-  const match =
-    airports.find(a => a.name.toLowerCase() === q) ??
-    airports.find(a => a.name.toLowerCase().includes(q));
+    getDistance(nameA: string, nameB: string): { distanceKm: number; } | null {
+        const airportA = this.findAirport(nameA);
+        const airportB = this.findAirport(nameB);
 
-  if (!match) return null;
+        if (!airportA) { console.error(`Airport not found: "${nameA}"`); return null; }
+        if (!airportB) { console.error(`Airport not found: "${nameB}"`); return null; }
 
-  return { latitude: match.latitude, longitude: match.longitude };
-}
+        const distanceKm = haversineKm(
+            airportA.latitude, airportA.longitude,
+            airportB.latitude, airportB.longitude
+        );
 
-function haversineKm(a: Coordinates, b: Coordinates): number {
-  const R = 6371; // Earth's radius dont change
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
+        return {
+            distanceKm: Math.round(distanceKm)
+        };
+    }
 
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLon = toRad(b.longitude - a.longitude);
-
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.latitude)) *
-    Math.cos(toRad(b.latitude)) *
-    Math.sin(dLon / 2) ** 2;
-
-  return R * 2 * Math.asin(Math.sqrt(h));
-}
-
-export function getDistanceBetweenAirports(
-  nameA: string,
-  nameB: string
-): { distanceKm: number; distanceMiles: number } | null {
-  const coordsA = getAirportCoordinates(nameA);
-  const coordsB = getAirportCoordinates(nameB);
-
-  if (!coordsA) { console.error(`Airport not found: "${nameA}"`); return null; }
-  if (!coordsB) { console.error(`Airport not found: "${nameB}"`); return null; }
-
-  const distanceKm = haversineKm(coordsA, coordsB);
-  return {
-    distanceKm: Math.round(distanceKm),
-    distanceMiles: Math.round(distanceKm * 0.621371),
-  };
+    getAirportCoordinates(name: string): { latitude: number; longitude: number } | null {
+        const airport = this.findAirport(name);
+        if (!airport) {
+            console.error(`Airport not found: "${name}"`);
+            return null;
+        }
+        return {
+            latitude: airport.latitude,
+            longitude: airport.longitude
+        };
+    }
 }

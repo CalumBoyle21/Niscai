@@ -13,6 +13,8 @@ async function main() {
   console.log(coords);
 
   await journeyCalc.addLeg("truck", "1600 Amphitheatre Parkway, Mountain View, CA", "1 Infinite Loop, Cupertino, CA");
+    await journeyCalc.addLeg("train", "London Paddington", "Bristol Temple Meads");
+
 
   const legs = await journeyCalc.getLegs();
   console.log(legs);

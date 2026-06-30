@@ -168,4 +168,5 @@ export class PortDistanceCalculator {
   get allNodes(): string[] {
     return [...this.graph.keys()];
   }
+
 }

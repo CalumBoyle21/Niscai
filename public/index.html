@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niscai — Freight CO2 Calculator</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f3;
+      --surface: #ffffff;
+      --border: #e5e5e2;
+      --border-strong: #d0d0cc;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b66;
+      --text-muted: #9b9b96;
+      --accent: #1a56db;
+      --accent-bg: #eff4ff;
+      --radius: 8px;
+      --ship-bg: #e6f1fb; --ship-text: #0c447c; --ship-bar: #378add;
+      --air-bg: #eeedfe;  --air-text: #3c3489; --air-bar: #7f77dd;
+      --truck-bg: #faeeda; --truck-text: #633806; --truck-bar: #ba7517;
+      --train-bg: #eaf3de; --train-text: #27500a; --train-bar: #639922;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-logo { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+    .topbar-sub { font-size: 12px; color: var(--text-muted); }
+
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title { font-size: 13px; font-weight: 600; }
+    .card-body { padding: 1.25rem; }
+
+    .form-grid { display: grid; grid-template-columns: 140px 1fr 1fr auto; gap: 8px; align-items: end; }
+
+    label { display: block; font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    select, input[type="text"] {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 13px;
+      background: #fff;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    select:focus, input[type="text"]:focus { border-color: var(--accent); }
+
+    .btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border-color: var(--border-strong); }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-danger { background: transparent; color: #a32d2d; border: none; cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 6px; border-radius: 4px; }
+    .btn-danger:hover { background: #fcebeb; }
+
+    .error { font-size: 12px; color: #a32d2d; background: #fcebeb; border: 1px solid #f09595; border-radius: var(--radius); padding: 8px 12px; margin-top: 10px; }
+
+    .empty {
+      text-align: center;
+      padding: 3rem 1.25rem;
+      color: var(--text-muted);
+      font-size: 13px;
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .timeline { margin-top: 1rem; }
+
+    .leg-row { display: flex; gap: 12px; align-items: stretch; margin-bottom: 2px; }
+    .leg-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 6px; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .leg-line { width: 1px; background: var(--border-strong); flex: 1; min-height: 20px; margin: 3px 0; }
+    .leg-card {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .leg-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .leg-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .badge-ship  { background: var(--ship-bg);  color: var(--ship-text);  }
+    .badge-air   { background: var(--air-bg);   color: var(--air-text);   }
+    .badge-truck { background: var(--truck-bg); color: var(--truck-text); }
+    .badge-train { background: var(--train-bg); color: var(--train-text); }
+    .dot-ship  { background: var(--ship-bar);  }
+    .dot-air   { background: var(--air-bar);   }
+    .dot-truck { background: var(--truck-bar); }
+    .dot-train { background: var(--train-bar); }
+
+    .leg-route { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .leg-route span { color: var(--text-muted); }
+    .leg-dist { font-size: 12px; color: var(--text-secondary); }
+    .leg-co2 { font-size: 13px; font-weight: 600; min-width: 80px; text-align: right; }
+
+    .dest-row { display: flex; gap: 12px; align-items: center; }
+    .dest-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border-strong); flex-shrink: 0; }
+    .dest-label { font-size: 12px; color: var(--text-muted); }
+
+    .loading { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 13px; }
+
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+    .metric { background: var(--bg); border-radius: var(--radius); padding: 10px 12px; }
+    .metric-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-value { font-size: 22px; font-weight: 600; line-height: 1.1; }
+    .metric-unit { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    .breakdown-title { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .breakdown-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .breakdown-label { width: 42px; }
+    .breakdown-bar-track { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .breakdown-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+    .breakdown-val { font-size: 12px; font-weight: 500; min-width: 56px; text-align: right; }
+    .breakdown-pct { font-size: 11px; color: var(--text-muted); min-width: 30px; text-align: right; }
+
+    .actions { display: flex; gap: 8px; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+    input[type="file"] { display: none; }
+
+    .autocomplete { position: relative; }
+    .autocomplete input {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 13px;
+      background: #fff;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .autocomplete input:focus { border-color: var(--accent); }
+    .autocomplete-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .autocomplete-item {
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .autocomplete-item.active, .autocomplete-item:hover { background: var(--accent-bg); }
+    .autocomplete-empty { padding: 8px 10px; font-size: 12px; color: var(--text-muted); }
+
+    @media (max-width: 780px) {
+      .layout { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid > *:nth-child(1) { grid-column: 1 / -1; }
+      .form-grid > *:last-child { grid-column: 1 / -1; }
+      .form-grid .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useCallback, useRef } = React;
+
+    const API = "http://localhost:3000/api/journey";
+
+    const MODES = ["ship", "air", "truck", "train"];
+    const MODE_LABELS = { ship: "Ship", air: "Air", truck: "Truck", train: "Train" };
+    const BAR_COLORS = { ship: "#378add", air: "#7f77dd", truck: "#ba7517", train: "#639922" };
+
+    function Autocomplete({ value, onChange, options, placeholder, disabled }) {
+      const [query, setQuery] = useState(value);
+      const [open, setOpen] = useState(false);
+      const [activeIndex, setActiveIndex] = useState(-1);
+      const wrapRef = useRef(null);
+
+      React.useEffect(() => { setQuery(value); }, [value]);
+
+      React.useEffect(() => {
+        function handleClickOutside(e) {
+          if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+      }, []);
+
+      const filtered = query
+        ? options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, 50)
+        : options.slice(0, 50);
+
+      const selectOption = (name) => {
+        onChange(name);
+        setQuery(name);
+        setOpen(false);
+        setActiveIndex(-1);
+      };
+
+      const handleKeyDown = (e) => {
+        if (!open && (e.key === "ArrowDown" || e.key === "Enter")) { setOpen(true); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, filtered.length - 1)); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
+        else if (e.key === "Enter") {
+          e.preventDefault();
+          if (activeIndex >= 0 && filtered[activeIndex]) selectOption(filtered[activeIndex]);
+        } else if (e.key === "Escape") {
+          setOpen(false);
+        }
+      };
+
+      return (
+        <div className="autocomplete" ref={wrapRef}>
+          <input
+            type="text"
+            placeholder={disabled ? "Loading…" : placeholder}
+            value={query}
+            disabled={disabled}
+            onChange={e => { setQuery(e.target.value); onChange(""); setOpen(true); setActiveIndex(-1); }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={handleKeyDown}
+          />
+          {open && !disabled && (
+            <div className="autocomplete-menu">
+              {filtered.length === 0 && <div className="autocomplete-empty">No matches</div>}
+              {filtered.map((name, i) => (
+                <div
+                  key={name}
+                  className={`autocomplete-item ${i === activeIndex ? "active" : ""}`}
+                  onMouseDown={() => selectOption(name)}
+                  onMouseEnter={() => setActiveIndex(i)}
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      const [legs, setLegs] = useState([]);
+      const [results, setResults] = useState(null);
+      const [mode, setMode] = useState("ship");
+      const [origin, setOrigin] = useState("");
+      const [dest, setDest] = useState("");
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState("");
+      const [locations, setLocations] = useState({ ship: [], air: [], train: [] });
+      const [locationsLoading, setLocationsLoading] = useState(true);
+      const fileInputRef = useRef(null);
+
+      React.useEffect(() => {
+        async function loadLocations() {
+          try {
+            const [ports, airports, stations] = await Promise.all([
+              fetch("http://localhost:3000/api/locations/ports").then(r => r.json()),
+              fetch("http://localhost:3000/api/locations/airports").then(r => r.json()),
+              fetch("http://localhost:3000/api/locations/stations").then(r => r.json()),
+            ]);
+            setLocations({ ship: ports, air: airports, train: stations });
+          } catch (e) {
+            setError("Could not load location lists from the server.");
+          } finally {
+            setLocationsLoading(false);
+          }
+        }
+        loadLocations();
+      }, []);
+
+      const handleModeChange = (newMode) => {
+        setMode(newMode);
+        setOrigin("");
+        setDest("");
+      };
+
+      const usesDropdown = mode !== "truck";
+      const optionsList = locations[mode] ?? [];
+
+      const callApi = useCallback(async (newLegs) => {
+        if (newLegs.length === 0) { setResults(null); return; }
+        setLoading(true);
+        setError("");
+        try {
+          const res = await fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ legs: newLegs }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Something went wrong.");
+          setResults(data);
+        } catch (e) {
+          setError(e.message);
+          setResults(null);
+        } finally {
+          setLoading(false);
+        }
+      }, []);
+
+      const addLeg = async () => {
+        if (!origin.trim() || !dest.trim()) { setError("Enter an origin and destination."); return; }
+        const newLegs = [...legs, { mode, origin: origin.trim(), destination: dest.trim() }];
+        setLegs(newLegs);
+        setOrigin("");
+        setDest("");
+        await callApi(newLegs);
+      };
+
+      const removeLeg = async (i) => {
+        const newLegs = legs.filter((_, idx) => idx !== i);
+        setLegs(newLegs);
+        await callApi(newLegs);
+      };
+
+      const clearAll = () => { setLegs([]); setResults(null); setError(""); };
+
+      const exportCsv = () => {
+        const rows = legs.map((l, i) =>
+          `${l.mode},${l.origin},${l.destination},${resultLegs[i]?.distanceKm ?? ""},${resultLegs[i]?.totalCO2Kg ?? ""}`
+        );
+        const csv = ["mode,origin,destination,distanceKm,totalCO2Kg", ...rows].join("\n");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+        a.download = "niscai-journey.csv";
+        a.click();
+      };
+
+      const importCsv = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+          const lines = ev.target.result.trim().split("\n");
+          const header = lines[0].toLowerCase();
+          if (!header.startsWith("mode,origin,destination")) {
+            setError("Invalid CSV format. Export a journey first, then re-import it.");
+            return;
+          }
+          const parsed = lines.slice(1).map(line => {
+            const [mode, origin, destination] = line.split(",");
+            return { mode: mode?.trim(), origin: origin?.trim(), destination: destination?.trim() };
+          }).filter(l => l.mode && l.origin && l.destination && MODES.includes(l.mode));
+
+          if (parsed.length === 0) {
+            setError("No valid legs found in the CSV.");
+            return;
+          }
+          setLegs(parsed);
+          await callApi(parsed);
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      };
+
+      const resultLegs = results?.legs ?? [];
+      const summary = results?.summary;
+      const maxCO2 = summary ? Math.max(...Object.values(summary.co2ByMode)) : 1;
+
+      return (
+        <>
+          <div className="topbar">
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <img src="/images/NiscaiLogo.png" alt="Niscai" style={{ height: 45 }} />
+            </div>
+            <span className="topbar-sub">Freight CO2 Calculator</span>
+          </div>
+
+          <div className="layout">
+            <div>
+              <div className="card">
+                <div className="card-header">
+                  <span className="card-title">(ITEM NAME)</span>
+                  {legs.length > 0 && <button className="btn btn-ghost" style={{fontSize:12,height:28,padding:"0 10px"}} onClick={clearAll}>Clear all</button>}
+                </div>
+                <div className="card-body">
+                  <div className="form-grid">
+                    <div>
+                      <label>Mode</label>
+                      <select value={mode} onChange={e => handleModeChange(e.target.value)}>
+                        {MODES.map(m => <option key={m} value={m}>{MODE_LABELS[m]}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label>Origin</label>
+                      {usesDropdown ? (
+                        <Autocomplete
+                          value={origin}
+                          onChange={setOrigin}
+                          options={optionsList}
+                          placeholder={`Search ${MODE_LABELS[mode].toLowerCase()} locations…`}
+                          disabled={locationsLoading}
+                        />
+                      ) : (
+                        <input type="text" placeholder="e.g. 1 Infinite Loop, Cupertino" value={origin} onChange={e => setOrigin(e.target.value)} onKeyDown={e => e.key === "Enter" && addLeg()} />
+                      )}
+                    </div>
+                    <div>
+                      <label>Destination</label>
+                      {usesDropdown ? (
+                        <Autocomplete
+                          value={dest}
+                          onChange={setDest}
+                          options={optionsList}
+                          placeholder={`Search ${MODE_LABELS[mode].toLowerCase()} locations…`}
+                          disabled={locationsLoading}
+                        />
+                      ) : (
+                        <input type="text" placeholder="e.g. 1600 Amphitheatre Pkwy" value={dest} onChange={e => setDest(e.target.value)} onKeyDown={e => e.key === "Enter" && addLeg()} />
+                      )}
+                    </div>
+                    <div>
+                      <label>&nbsp;</label>
+                      <button className="btn btn-primary" onClick={addLeg} disabled={loading}>
+                        {loading ? "…" : "+ Add leg"}
+                      </button>
+                    </div>
+                  </div>
+                  {error && <div className="error">{error}</div>}
+                </div>
+              </div>
+
+              <div className="timeline">
+                {legs.length === 0 && !loading && (
+                  <div className="empty">Add a leg above to start building your journey.</div>
+                )}
+                {loading && legs.length > 0 && <div className="loading">Calculating…</div>}
+                {!loading && resultLegs.map((leg, i) => (
+                  <div key={i} className="leg-row">
+                    <div className="leg-spine">
+                      <div className={`leg-dot dot-${legs[i]?.mode}`} />
+                      <div className="leg-line" />
+                    </div>
+                    <div className="leg-card">
+                      <div className="leg-left">
+                        <span className={`badge badge-${legs[i]?.mode}`}>{MODE_LABELS[legs[i]?.mode]}</span>
+                        <span className="leg-route">
+                          {legs[i]?.origin} <span>→</span> {legs[i]?.destination}
+                        </span>
+                      </div>
+                      <div className="leg-right">
+                        <span className="leg-dist">{leg.distanceKm.toLocaleString()} km</span>
+                        <span className="leg-co2">{leg.totalCO2Kg.toLocaleString()} kg CO₂</span>
+                        <button className="btn-danger" onClick={() => removeLeg(i)} aria-label="Remove leg">×</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {!loading && legs.length > 0 && (
+                  <div className="dest-row">
+                    <div className="dest-dot" />
+                    <span className="dest-label">Final destination</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="card">
+                <div className="card-header"><span className="card-title">Summary</span></div>
+                <div className="card-body">
+                  {!summary ? (
+                    <p style={{fontSize:13, color:"var(--text-muted)"}}>Add legs to see your journey summary.</p>
+                  ) : (
+                    <>
+                      <div className="metric-grid">
+                        <div className="metric">
+                          <div className="metric-label">Total CO₂</div>
+                          <div className="metric-value">{summary.totalCO2Kg.toLocaleString()}</div>
+                          <div className="metric-unit">kg</div>
+                        </div>
+                        <div className="metric">
+                          <div className="metric-label">Distance</div>
+                          <div className="metric-value">{summary.totalDistanceKm.toLocaleString()}</div>
+                          <div className="metric-unit">km</div>
+                        </div>
+                        <div className="metric">
+                          <div className="metric-label">Legs</div>
+                          <div className="metric-value">{summary.legCount}</div>
+                        </div>
+                        <div className="metric">
+                          <div className="metric-label">Intensity</div>
+                          <div className="metric-value">{Math.round((summary.totalCO2Kg / summary.totalDistanceKm) * 1000)}</div>
+                          <div className="metric-unit">g CO₂/km</div>
+                        </div>
+                      </div>
+
+                      <div className="breakdown-title">Emissions by mode</div>
+                      {["air","truck","ship","train"].filter(m => summary.co2ByMode[m]).map(m => {
+                        const val = summary.co2ByMode[m];
+                        const pct = Math.round((val / summary.totalCO2Kg) * 100);
+                        const barW = Math.round((val / maxCO2) * 100);
+                        return (
+                          <div key={m} className="breakdown-row">
+                            <div className="breakdown-label">
+                              <span className={`badge badge-${m}`}>{MODE_LABELS[m]}</span>
+                            </div>
+                            <div className="breakdown-bar-track">
+                              <div className="breakdown-bar-fill" style={{width:`${barW}%`, background: BAR_COLORS[m]}} />
+                            </div>
+                            <div className="breakdown-val">{val.toLocaleString()} kg</div>
+                            <div className="breakdown-pct">{pct}%</div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  <div className="actions">
+                    <input type="file" accept=".csv" ref={fileInputRef} onChange={importCsv} />
+                    <button className="btn btn-ghost" style={{flex:1}} onClick={() => fileInputRef.current.click()}>
+                      Import CSV
+                    </button>
+                    {summary && (
+                      <button className="btn btn-ghost" style={{flex:1}} onClick={exportCsv}>
+                        Export CSV
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
+
