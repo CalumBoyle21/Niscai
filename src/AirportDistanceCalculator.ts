@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { haversineKm } from './HaversineKm';
+import { ParseCoordinates } from './ParseCoordinates';
 
 interface Airport {
   name: string;
@@ -15,6 +16,10 @@ export class AirportDistanceCalculator {
     }
 
     private findAirport(name: string): Airport | null {
+        const parsed = ParseCoordinates.tryParseCoords(name);
+        if (parsed) {
+            return { name, latitude: parsed.latitude, longitude: parsed.longitude };
+        }
         const q = name.toLowerCase();
         return (
             this.airports.find(a => a.name.toLowerCase() === q) ??
@@ -23,20 +28,16 @@ export class AirportDistanceCalculator {
         );
     }
 
-    getDistance(nameA: string, nameB: string): { distanceKm: number; } | null {
+    getDistance(nameA: string, nameB: string): { distanceKm: number } | null {
         const airportA = this.findAirport(nameA);
         const airportB = this.findAirport(nameB);
-
         if (!airportA) { console.error(`Airport not found: "${nameA}"`); return null; }
         if (!airportB) { console.error(`Airport not found: "${nameB}"`); return null; }
-
-        const distanceKm = haversineKm(
-            airportA.latitude, airportA.longitude,
-            airportB.latitude, airportB.longitude
-        );
-
         return {
-            distanceKm: Math.round(distanceKm)
+            distanceKm: Math.round(haversineKm(
+                airportA.latitude, airportA.longitude,
+                airportB.latitude, airportB.longitude
+            ))
         };
     }
 
@@ -46,9 +47,6 @@ export class AirportDistanceCalculator {
             console.error(`Airport not found: "${name}"`);
             return null;
         }
-        return {
-            latitude: airport.latitude,
-            longitude: airport.longitude
-        };
+        return { latitude: airport.latitude, longitude: airport.longitude };
     }
 }

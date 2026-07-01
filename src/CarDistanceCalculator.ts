@@ -1,24 +1,42 @@
+import { haversineKm } from "./HaversineKm";
+import { ParseCoordinates } from "./ParseCoordinates";
+import { Geocoder } from "./CoordAddressConverter";
+
 export class CarDistanceCalculator {
-/**
- * Fetches the road distance in kilometers between two geographic coordinates using the OSRM API.
- * @param originLat - The latitude of the origin point.
- * @param originLon - The longitude of the origin point.
- * @param destLat - The latitude of the destination point.
- * @param destLon - The longitude of the destination point.
- */
-    static async getRoadDistanceKm(
-    originLat: number, originLon: number,
-    destLat: number, destLon: number
-    ): Promise<number | null> {
 
-  const url = `http://router.project-osrm.org/route/v1/driving/${originLon},${originLat};${destLon},${destLat}?overview=false`;
+    private static geocoder = new Geocoder("NiscaiCO2Calculator");
 
-  const res = await fetch(url);
-  const data = await res.json();
+  /**
+   * Fetches the road distance in kilometers between two locations using the OSRM API.
+   * Accepts either coordinate strings ("lat, lon") or plain addresses.
+   * Falls back to Haversine with a detour factor if OSRM fails.
+   */
+  static async getRoadDistanceKm(origin: string, destination: string): Promise<number | null> {
+  const parsedOrigin = ParseCoordinates.tryParseCoords(origin);
+  const parsedDest = ParseCoordinates.tryParseCoords(destination);
 
-  if (data.code !== "Ok") return null;
+  const [coordsA, coordsB] = parsedOrigin && parsedDest
+    ? [parsedOrigin, parsedDest]
+    : await Promise.all([
+        parsedOrigin ?? this.geocoder.geocode(origin),
+        parsedDest   ?? this.geocoder.geocode(destination),
+      ]);
 
-  return data.routes[0].distance / 1000; 
+  if (!coordsA || !coordsB) return null;
+
+  const url = `http://router.project-osrm.org/route/v1/driving/${coordsA.longitude},${coordsA.latitude};${coordsB.longitude},${coordsB.latitude}?overview=false`;
+
+  const DETOUR_FACTOR = 1.3;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.code !== "Ok") {
+      return haversineKm(coordsA.latitude, coordsA.longitude, coordsB.latitude, coordsB.longitude) * DETOUR_FACTOR;
+    }
+    return data.routes[0].distance / 1000;
+  } catch {
+    return haversineKm(coordsA.latitude, coordsA.longitude, coordsB.latitude, coordsB.longitude) * DETOUR_FACTOR;
+  }
 }
 }
-
