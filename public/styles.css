@@ -243,3 +243,136 @@
       .form-grid > *:last-child { grid-column: 1 / -1; }
       .form-grid .btn { width: 100%; }
     }
+
+    .compare-dropdown {
+  position: relative;
+  max-width: 400px;
+  margin-bottom: 2rem;
+}
+
+.compare-dropdown-trigger {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.compare-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.compare-dropdown-item {
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compare-dropdown-item.selected {
+  background: var(--accent-bg);
+}
+
+.compare-checkbox {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.compare-checkbox.checked {
+  background: var(--accent);
+}
+
+.compare-checkbox-tick {
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.compare-item-co2 {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.compare-bar-row {
+  margin-bottom: 20px;
+}
+
+.compare-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.compare-bar-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.compare-bar-value {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.compare-lowest-badge {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--train-bg);
+  color: var(--train-text);
+}
+
+.compare-bar-track {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.compare-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.compare-bar-fill.lowest {
+  background: var(--train-bar);
+}
+
+.compare-bar-fill.normal {
+  background: var(--accent);
+}
+
+.compare-bar-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

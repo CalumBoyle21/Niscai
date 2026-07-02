@@ -1,12 +1,30 @@
-function HomePage({ items, onNew, onOpen, onDelete }) {
+function HomePage({ items, onNew, onOpen, onDelete, onCompare }) {
   return (
+    <>
+      <div className="topbar">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img
+            src="/Images/NiscaiLogo.png"
+            alt="Niscai Logo"
+            style={{ width: 120, height: "auto" }}
+          />
+          <span className="topbar-sub">Freight CO2 Calculator</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+
+          <button className="btn btn-primary" onClick={onCompare}>Compare Items</button>
+
+          <button className="btn btn-primary" onClick={onNew}>+ New Item</button>
+
+        </div>
+      </div>
+
     <div className="layout" style={{ gridTemplateColumns: "1fr" }}>
       <div>
         <div className="home-header">
           <h1 className="home-title">Your Items</h1>
-          <button className="btn btn-primary" onClick={onNew}>+ New Item</button>
-        </div>
 
+        </div>
         {items.length === 0 ? (
           <div className="empty" style={{ marginTop: "1.5rem" }}>
             No saved items yet. Start a new one to calculate and save your first route.
@@ -38,5 +56,6 @@ function HomePage({ items, onNew, onOpen, onDelete }) {
         )}
       </div>
     </div>
+    </>
   );
 }

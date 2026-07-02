@@ -135,7 +135,11 @@ function JourneyBuilder({ existingItem, onBack, onSave }) {
       <div className="topbar">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button className="btn btn-ghost" style={{ height: 30, padding: "0 12px", fontSize: 12 }} onClick={onBack}>← Home</button>
-          <span className="topbar-logo">Niscai</span>
+          <img
+            src="/Images/NiscaiLogo.png"
+            alt="Niscai Logo"
+            style={{ width: 120, height: "auto" }}
+          />
           <span className="topbar-sub">Freight CO2 Calculator</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

@@ -6,6 +6,7 @@ function Root() {
   const openNew = () => { setActiveItem(null); setView("builder"); };
   const openExisting = (item) => { setActiveItem(item); setView("builder"); };
   const goHome = () => { setView("home"); setActiveItem(null); };
+  const goCompare = () => setView("compare");
 
   const handleSave = (item) => {
     setItems(prev => {
@@ -25,9 +26,8 @@ function Root() {
     });
   };
 
-  if (view === "home") {
-    return <HomePage items={items} onNew={openNew} onOpen={openExisting} onDelete={handleDelete} />;
-  }
+  if (view === "compare") return <ComparePage items={items} onBack={goHome} />;
+  if (view === "home") return <HomePage items={items} onNew={openNew} onOpen={openExisting} onDelete={handleDelete} onCompare={goCompare} />;
   return <JourneyBuilder existingItem={activeItem} onBack={goHome} onSave={handleSave} />;
 }
 
